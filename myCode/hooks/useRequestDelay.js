@@ -13,6 +13,9 @@ export function useRequestDelay(delayTime = 1000, initialData = []) {
   const [error, setError] = useState("");
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  // To use for testing 'failure' of update in updateRecord
+  const delayError = (ms) =>
+    new Promise((resolve, reject) => setTimeout(reject, ms));
 
   useEffect(() => {
     async function delayFunc() {
@@ -30,19 +33,24 @@ export function useRequestDelay(delayTime = 1000, initialData = []) {
   }, []);
 
   function updateRecord(recordUpdated, doneCallback) {
+    const originalRecords = [...data];
     const newRecords = data.map((record) => {
       return record.id === recordUpdated.id ? recordUpdated : record;
     });
 
     async function delayFunction() {
       try {
+        setData(newRecords);
         await delay(delayTime);
         if (doneCallback) {
           doneCallback();
         }
-        setData(newRecords);
       } catch (error) {
         console.log("error thrown inside delayFunction", error);
+        if (doneCallback) {
+          doneCallback();
+        }
+        setData(originalRecords);
       }
     }
     delayFunction();
