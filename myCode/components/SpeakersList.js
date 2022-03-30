@@ -2,14 +2,17 @@ import Speaker from "./Speaker";
 import ReactPlaceHolder from "react-placeholder";
 import { useRequestDelay, REQUEST_STATUS } from "../hooks/useRequestDelay";
 import { data } from "../SpeakerData";
+import { useContext } from "react";
+import { SpeakerFilterContext } from "../contexts/SpeakerFilterContext";
 
-function SpeakersList({ showSessions }) {
+function SpeakersList() {
   const {
     data: speakers,
     requestStatus,
     error,
     updateRecord,
   } = useRequestDelay(2000, data);
+  const { eventYear, searchQuery } = useContext(SpeakerFilterContext);
 
   if (requestStatus === REQUEST_STATUS.FAILURE) {
     return (
@@ -30,21 +33,27 @@ function SpeakersList({ showSessions }) {
         ready={requestStatus === REQUEST_STATUS.SUCCESS}
       >
         <div className="row">
-          {speakers.map((speaker) => {
-            return (
-              <Speaker
-                key={speaker.id}
-                speaker={speaker}
-                showSessions={showSessions}
-                onFavoriteToggle={(doneCallback) =>
-                  updateRecord(
-                    { ...speaker, favorite: !speaker.favorite },
-                    doneCallback
-                  )
-                }
-              />
-            );
-          })}
+          {speakers
+            .filter((speaker) => {
+              return (
+                speaker.first.toLowerCase().includes(searchQuery) ||
+                speaker.last.toLowerCase().includes(searchQuery)
+              );
+            })
+            .filter((speaker) =>
+              speaker.sessions.find(
+                (session) => session.eventYear === eventYear
+              )
+            )
+            .map((speaker) => {
+              return (
+                <Speaker
+                  key={speaker.id}
+                  speaker={speaker}
+                  updateRecord={updateRecord}
+                />
+              );
+            })}
         </div>
       </ReactPlaceHolder>
     </div>
