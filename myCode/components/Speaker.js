@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { SpeakerFilterContext } from "../contexts/SpeakerFilterContext";
 import { SpeakerProvider, SpeakerContext } from "../contexts/SpeakerContext";
+import SpeakerDelete from "./SpeakerDelete";
 
 function Session({ title, room }) {
   return (
@@ -24,13 +25,27 @@ function Sessions() {
   );
 }
 
+function ImageWithFallback({ src, ...props }) {
+  const [error, setError] = useState(false);
+  const [imgSrc, setImgSrc] = useState(src);
+
+  function onError() {
+    if (!error) {
+      setImgSrc("/images/speaker-99999.jpg");
+      setError(true);
+    }
+  }
+
+  return <img src={imgSrc} {...props} onError={onError} />;
+}
+
 function SpeakerImage() {
   const {
     speaker: { id, first, last },
   } = useContext(SpeakerContext);
   return (
     <div className="speaker-img d-flex flex-row justify-content-center align-items-center h-300">
-      <img
+      <ImageWithFallback
         className="contain-fit"
         src={`/images/speaker-${id}.jpg`}
         width="300"
@@ -102,18 +117,23 @@ function SpeakerDemographics() {
   );
 }
 
-function Speaker({ speaker, updateRecord }) {
+function Speaker({ speaker, updateRecord, insertRecord, deleteRecord }) {
   const { showSessions } = useContext(SpeakerFilterContext);
-  const { sessions, id, first, last } = speaker;
 
   return (
-    <SpeakerProvider speaker={speaker} updateRecord={updateRecord}>
+    <SpeakerProvider
+      speaker={speaker}
+      updateRecord={updateRecord}
+      insertRecord={insertRecord}
+      deleteRecord={deleteRecord}
+    >
       <div className="col-xs-12 col-sm-12 col-md-12 col-md-6 col-lg-4">
         <div className="card card-height p-4 mt-4">
           <SpeakerImage />
           <SpeakerDemographics />
         </div>
         {showSessions ? <Sessions /> : null}
+        <SpeakerDelete />
       </div>
     </SpeakerProvider>
   );
